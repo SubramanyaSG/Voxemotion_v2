@@ -28,14 +28,20 @@ class EmotionSynthesizer:
 
     def __init__(self, dataset_df, output_dir: str = OUTPUT_DIR,
                  sr: int = SAMPLE_RATE):
-        
-        self.df  = dataset_df[dataset_df['readable'] == True].copy() \
-                   if not dataset_df.empty else dataset_df
+        try:
+            self.df = dataset_df[dataset_df['readable'] == True].copy() \
+                      if (dataset_df is not None and not dataset_df.empty) else \
+                      __import__('pandas').DataFrame()
+        except Exception:
+            self.df = __import__('pandas').DataFrame()
+            
+        """self.df  = dataset_df[dataset_df['readable'] == True].copy() \
+                   if not dataset_df.empty else dataset_df"""
         #while using in local use the below code and while using in hosted server use the above code for firebase initialization
         '''self.df = dataset_df[dataset_df['readable'] == True].copy() \
-                  if (dataset_df is not None and not dataset_df.empty) else \
-                  __import__('pandas').DataFrame()'''
-                  
+                    if (dataset_df is not None and not dataset_df.empty) else \
+                    __import__('pandas').DataFrame()'''
+                    
         self.out = output_dir
         self.sr  = sr
 
@@ -46,9 +52,14 @@ class EmotionSynthesizer:
         self._device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         self._load_tacotron2()
+    
+    @property
+    def using_tacotron2(self) -> bool:
+        """Returns True if Tacotron2 loaded successfully."""
+        return self._t2 is not None and not self._failed
 
     # ── Model loading ─────────────────────────────────────────────────────────
-    def _load_tacotron2(self) -> bool:
+    """ def _load_tacotron2(self) -> bool:
         if self._failed:
             return False
         try:
@@ -82,7 +93,98 @@ class EmotionSynthesizer:
 
     @property
     def using_tacotron2(self) -> bool:
-        return self._t2 is not None and not self._failed
+        return self._t2 is not None and not self._failed"""
+    
+    def _load_tacotron2(self) -> bool:
+        if self._failed:
+            return False
+
+        t2_weights = os.path.join(os.path.dirname(__file__), 'tacotron2_weights.pth')
+        wg_weights = os.path.join(os.path.dirname(__file__), 'waveglow_weights.pth')
+
+        # ── Strategy 1: Load from local weight files (fastest, no internet needed) ──
+        if os.path.exists(t2_weights) and os.path.exists(wg_weights):
+            try:
+                print('⏳  Loading Tacotron2 from local weights ...')
+                self._t2 = torch.hub.load(
+                    'NVIDIA/DeepLearningExamples:torchhub',
+                    'nvidia_tacotron2',
+                    model_math='fp32',
+                    verbose=False,
+                    pretrained=False          # skip weight download
+                ).to(self._device).eval()
+                self._t2.load_state_dict(
+                    torch.load(t2_weights, map_location=self._device)
+                )
+
+                self._wg = torch.hub.load(
+                    'NVIDIA/DeepLearningExamples:torchhub',
+                    'nvidia_waveglow',
+                    model_math='fp32',
+                    verbose=False,
+                    pretrained=False          # skip weight download
+                ).to(self._device).eval()
+                self._wg.load_state_dict(
+                    torch.load(wg_weights, map_location=self._device)
+                )
+
+                self._utils = torch.hub.load(
+                    'NVIDIA/DeepLearningExamples:torchhub',
+                    'nvidia_tts_utils',
+                    verbose=False
+                )
+                for m in self._wg.modules():
+                    if hasattr(m, 'weight_v'):
+                        torch.nn.utils.remove_weight_norm(m)
+
+                print('✅  Tacotron2 loaded from local weights.')
+                return True
+            except Exception as e:
+                print(f'⚠  Local weight load failed: {e}')
+
+        # ── Strategy 2: Download from torch.hub (needs internet, may rate-limit) ──
+        try:
+            print('⏳  Downloading Tacotron2 from torch.hub ...')
+            self._t2 = torch.hub.load(
+                'NVIDIA/DeepLearningExamples:torchhub',
+                'nvidia_tacotron2',
+                model_math='fp32',
+                verbose=False
+            ).to(self._device).eval()
+
+            self._wg = torch.hub.load(
+                'NVIDIA/DeepLearningExamples:torchhub',
+                'nvidia_waveglow',
+                model_math='fp32',
+                verbose=False
+            ).to(self._device).eval()
+
+            self._utils = torch.hub.load(
+                'NVIDIA/DeepLearningExamples:torchhub',
+                'nvidia_tts_utils',
+                verbose=False
+            )
+            for m in self._wg.modules():
+                if hasattr(m, 'weight_v'):
+                    torch.nn.utils.remove_weight_norm(m)
+
+            # Save locally so next restart doesn't need to download
+            try:
+                os.makedirs(os.path.dirname(t2_weights), exist_ok=True)
+                torch.save(self._t2.state_dict(), t2_weights)
+                torch.save(self._wg.state_dict(), wg_weights)
+                print('✅  Weights saved locally for future restarts.')
+            except Exception:
+                pass
+
+            print('✅  Tacotron2 downloaded and loaded.')
+            return True
+
+        except Exception as e:
+            print(f'⚠  Tacotron2 not available ({e})')
+            print('   → Retrieval-based synthesis will be used.')
+            self._failed = True
+            return False
 
     # ── Synthesis methods ─────────────────────────────────────────────────────
     def _synthesize_chunk_t2(self, chunk: str) -> np.ndarray:

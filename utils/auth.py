@@ -29,7 +29,7 @@ _fb_db       = None
 _fb_auth_mod = None
 USE_FIREBASE = False
 
-
+'''
 def init_firebase() -> bool:
     global _fb_app, _fb_db, _fb_auth_mod, USE_FIREBASE
     if not os.path.exists(FIREBASE_CREDENTIALS):
@@ -102,7 +102,7 @@ def init_firebase() -> bool:
     except Exception as e:
         print(f'Firebase init failed: {e} → LOCAL mode')
         return False
-'''
+
     
 # ── Local user store (fallback) ───────────────────────────────────────────────
 _LOCAL_USERS_PATH = os.path.join(BASE_DIR, 'users.json')
