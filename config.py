@@ -20,11 +20,11 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # ============================================================
 # ⚙️  EDIT THESE PATHS TO MATCH YOUR SYSTEM
 # ============================================================
-DATASET_ROOT = r'D:\Emotion_Speech_Dataset\English'
+# DATASET_ROOT = r'D:\Emotion_Speech_Dataset\English'
 
 # On hosted server, dataset is NOT present — that's fine
 # Synthesis uses Tacotron2, not the dataset directly
-#DATASET_ROOT = os.environ.get('DATASET_ROOT', '')
+DATASET_ROOT = os.environ.get('DATASET_ROOT', '')
 
 OUTPUT_DIR   = os.path.join(BASE_DIR, 'outputs')
 MODEL_DIR    = os.path.join(BASE_DIR, 'models')

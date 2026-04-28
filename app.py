@@ -45,17 +45,18 @@ init_firebase()
 # ── Initialize Synthesizer (loads Tacotron2 once at startup) ─────────────────
 print('Initializing synthesizer …')
 
-_df          = get_dataset_df()
+'''_df          = get_dataset_df()
 _synthesizer = EmotionSynthesizer(dataset_df=_df, output_dir=OUTPUT_DIR)
+'''
 #while using in local use the below code and while using in hosted server use the above code for firebase initialization
-'''try:
+try:
     _df = get_dataset_df()
 except Exception:
     import pandas as pd
     _df = pd.DataFrame()
 _synthesizer = EmotionSynthesizer(dataset_df=_df, output_dir=OUTPUT_DIR)
 print('Synthesizer ready.\n')
-'''
+
 
 # ── Flask application ─────────────────────────────────────────────────────────
 app = Flask(__name__,
