@@ -1,27 +1,26 @@
-# Secrets
+# ── Secrets ────────────────────────────────────────────────
 .env
 firebase_credentials.json
 users.json
 
-# Python
+# ── Python ─────────────────────────────────────────────────
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
-.Python
 venv/
-env/
+.venv/
 *.egg-info/
+dist/
+build/
 
-# VS Code
-.vscode/
-*.code-workspace
+# ── Dataset (never push — too large) ───────────────────────
+Emotion_Speech_Dataset/
 
-# Large outputs
+# ── Generated audio files ───────────────────────────────────
 outputs/*.wav
-outputs/*.png
-outputs/*.csv
-#models/*.pth
 
-# OS
+# ── OS / IDE ────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
+.vscode/
+.idea/
