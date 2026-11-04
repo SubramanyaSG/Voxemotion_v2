@@ -29,11 +29,11 @@ _fb_db       = None
 _fb_auth_mod = None
 USE_FIREBASE = False
 
-'''
+
 def init_firebase() -> bool:
     global _fb_app, _fb_db, _fb_auth_mod, USE_FIREBASE
     if not os.path.exists(FIREBASE_CREDENTIALS):
-        print('[WARNING] firebase_credentials.json not found - LOCAL mode (users.json)')
+        print('⚠  firebase_credentials.json not found → LOCAL mode (users.json)')
         return False
     try:
         import firebase_admin
@@ -46,10 +46,10 @@ def init_firebase() -> bool:
         _fb_db       = firestore.client()
         _fb_auth_mod = fba
         USE_FIREBASE = True
-        print('[OK] Firebase Firestore connected.')
+        print('✅  Firebase Firestore connected.')
         return True
     except Exception as e:
-        print(f'[WARNING] Firebase init failed: {e} - LOCAL mode')
+        print(f'⚠  Firebase init failed: {e} → LOCAL mode')
         return False
     
 #while using in local use the above code and while using in hosted server use the below code for firebase initialization
@@ -77,14 +77,14 @@ def init_firebase() -> bool:
             _fb_db       = firestore.client()
             _fb_auth_mod = fba
             USE_FIREBASE = True
-            print('[OK] Firebase connected via environment variable.')
+            print('✅ Firebase connected via environment variable.')
             return True
         except Exception as e:
             print(f'Firebase env init failed: {e}')
 
     # Fall back to local file
     if not os.path.exists(FIREBASE_CREDENTIALS):
-        print('[WARNING] No Firebase credentials - LOCAL mode (users.json)')
+        print('⚠  No Firebase credentials → LOCAL mode (users.json)')
         return False
     try:
         import firebase_admin
@@ -97,12 +97,12 @@ def init_firebase() -> bool:
         _fb_db       = firestore.client()
         _fb_auth_mod = fba
         USE_FIREBASE = True
-        print('[OK] Firebase connected via file.')
+        print('✅ Firebase connected via file.')
         return True
     except Exception as e:
-        print(f'Firebase init failed: {e} - LOCAL mode')
+        print(f'Firebase init failed: {e} → LOCAL mode')
         return False
-
+'''
     
 # ── Local user store (fallback) ───────────────────────────────────────────────
 _LOCAL_USERS_PATH = os.path.join(BASE_DIR, 'users.json')
