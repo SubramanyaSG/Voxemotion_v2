@@ -115,6 +115,8 @@ def login_page():
     if 'user_email' in session:
         return redirect(url_for('index'))
 
+    csrf = session.get('csrf_token') or generate_csrf()
+
     if request.method == 'POST':
         if not validate_csrf(request.form.get('csrf_token', '')):
             flash('Invalid request. Please try again.', 'error')
@@ -144,13 +146,14 @@ def login_page():
         session.pop('csrf_token', None)
         return redirect(url_for('index'))
 
-    csrf = session.get('csrf_token') or generate_csrf()
     return render_template('login.html', csrf_token=csrf)
 
 
 @app.route('/register', methods=['POST'])
 def register():
     """Handle new user registration."""
+    csrf = session.get('csrf_token') or generate_csrf()
+
     if not validate_csrf(request.form.get('csrf_token', '')):
         flash('Invalid request. Please try again.', 'error')
         return redirect(url_for('login_page'))
